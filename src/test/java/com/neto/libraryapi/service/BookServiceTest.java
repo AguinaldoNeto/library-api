@@ -13,6 +13,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -33,7 +35,7 @@ public class BookServiceTest {
     }
 
     @Test
-    @DisplayName("Deve salvar um livro")
+    @DisplayName("Deve salvar um livro.")
     public void saveBookTest() {
         //cenario
         Book book = Book.builder()
@@ -62,7 +64,7 @@ public class BookServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar erro de negócio ao tentar salvar um livro com isbn duplicado")
+    @DisplayName("Deve lançar erro de negócio ao tentar salvar um livro com isbn duplicado.")
     public void shouldNotSaveABookDuplicatedIsbn() {
         Book book = Book.builder()
                 .author("Aguinaldo Neto")
@@ -81,4 +83,48 @@ public class BookServiceTest {
         Mockito.verify(repository, never()).save(book);
 
     }
+
+    @Test
+    @DisplayName("Deve obter um livro por id.")
+    public void getByIdTest() {
+        //cenario
+        Long id = 1L;
+
+        Book book = Book.builder()
+                .id(1L)
+                .author("Aguinaldo Neto")
+                .title("Como apanhar da TI todos os dias")
+                .isbn("123321")
+                .build();
+
+        when(repository.findById(id)).thenReturn(Optional.of(book));
+
+        //execucao
+        Optional<Book> foundBook = service.getById(id);
+
+        //verificacao
+        assertThat(foundBook.isPresent()).isTrue();
+        assertThat(foundBook.get().getId()).isEqualTo(1L);
+        assertThat(foundBook.get().getAuthor()).isEqualTo("Aguinaldo Neto");
+        assertThat(foundBook.get().getTitle()).isEqualTo("Como apanhar da TI todos os dias");
+        assertThat(foundBook.get().getIsbn()).isEqualTo("123321");
+
+    }
+
+    @Test
+    @DisplayName("Deve retornar vazio ao obter um livro por Id quando ele não existe na base.")
+    public void bookNotFoundByIdTest() {
+        //cenario
+        Long id = 1L;
+
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        //execucao
+        Optional<Book> book = service.getById(id);
+
+        //verificacao
+        assertThat(book.isEmpty());
+
+    }
+
 }
