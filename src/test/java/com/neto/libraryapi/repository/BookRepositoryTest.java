@@ -11,6 +11,12 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles("test")
 @DataJpaTest
@@ -34,7 +40,7 @@ public class BookRepositoryTest {
         boolean existsIsbn = repository.existsByIsbn(isbn);
 
         //verificação
-        Assertions.assertThat(existsIsbn).isTrue();
+        assertThat(existsIsbn).isTrue();
 
     }
 
@@ -48,7 +54,57 @@ public class BookRepositoryTest {
         boolean existsIsbn = repository.existsByIsbn(isbn);
 
         //verificação
-        Assertions.assertThat(existsIsbn).isFalse();
+        assertThat(existsIsbn).isFalse();
+
+    }
+
+    @Test
+    @DisplayName("Deve obter um livro por id.")
+    public void findByIdtest() {
+        //cenario
+        Book book = Book.builder().title("Aventuras").author("Fulano").isbn("123").build();
+        entityManager.persist(book);
+
+        //execucao
+        Optional<Book> foundBook = repository.findById(book.getId());
+
+        //verificacao
+        assertThat(foundBook.isPresent()).isTrue();
+
+    }
+
+    @Test
+    @DisplayName("Deve salvar um livro.")
+    public void saveBookTest() {
+        //cenario
+        Book book = Book.builder().title("Aventuras").author("Fulano").isbn("123").build();
+        entityManager.persist(book);
+
+        //execucao
+        Book savedBook = repository.save(book);
+
+        //verificacao
+        assertThat(savedBook.getId()).isNotNull();
+        assertThat(savedBook.getTitle()).isEqualTo("Aventuras");
+        assertThat(savedBook.getAuthor()).isEqualTo("Fulano");
+        assertThat(savedBook.getIsbn()).isEqualTo("123");
+
+    }
+
+    @Test
+    @DisplayName("Deve deletar um livro.")
+    public void deleteBookTest() {
+        //cenario
+        Book book = Book.builder().title("Aventuras").author("Fulano").isbn("123").build();
+        entityManager.persist(book);
+
+        //execucao
+        Book foundBook = entityManager.find(Book.class, book.getId());
+        repository.delete(foundBook);
+
+        //verificacao
+        Book deletedBook = entityManager.find(Book.class, book.getId());
+        assertThat(deletedBook).isNull();
 
     }
 

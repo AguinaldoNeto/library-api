@@ -16,9 +16,11 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(SpringExtension.class)
@@ -126,5 +128,79 @@ public class BookServiceTest {
         assertThat(book.isEmpty());
 
     }
+
+    @Test
+    @DisplayName("Deve deletar um livro por id.")
+    public void deleteBookTest() {
+        //cenario
+        Long id = 1L;
+        Book book = Book.builder().id(id).build();
+
+        //ação
+        assertDoesNotThrow( () -> service.delete(book));
+
+        //verificação
+        verify(repository, times(1)).delete(book);
+    }
+
+    @Test
+    @DisplayName("Deve retornar uma mensagem de erro ao tentar deletar um livro sem id.")
+    public void deleteBookWithoutIdTest() {
+        //cenario
+        Book book = Book.builder().build();
+
+        //ação
+        assertThrows(IllegalArgumentException.class, () -> service.delete(book), "Book id cant be null.");
+
+        //verificação
+        verify(repository, never()).delete(book);
+
+    }
+
+    @Test
+    @DisplayName("Deve atualizar um livro por id.")
+    public void updateBookTest() {
+        //cenario
+        Long id = 1L;
+        String isbn = "123";
+
+        Book bookCadastrado = Book.builder()
+                .id(id)
+                .title("Título")
+                .author("Autor")
+                .isbn(isbn)
+                .build();
+
+        Book bookAtualizado = Book.builder()
+                .id(id)
+                .title("Título atualizado")
+                .author("Autor atualizado")
+                .isbn(isbn)
+                .build();
+
+        //ação
+        when(repository.save(bookCadastrado)).thenReturn(bookAtualizado);
+        Book book = service.update(bookCadastrado);
+
+        //verificação
+        assertThat(book.getId()).isEqualTo(1L);
+        assertThat(book.getTitle()).isEqualTo("Título atualizado");
+        assertThat(book.getAuthor()).isEqualTo("Autor atualizado");
+    }
+
+    @Test
+    @DisplayName("Deve retornar uma mensagem de erro ao tentar atualizar um livro inexistente.")
+    public void updateInvalidBookTest() {
+        //cenario
+        Book book = new Book();
+
+        //ação
+        assertThrows(IllegalArgumentException.class, () -> service.update(book), "Book id cant be null.");
+
+        //verificação
+        verify(repository, never()).save(book);
+
+    }
+
 
 }
