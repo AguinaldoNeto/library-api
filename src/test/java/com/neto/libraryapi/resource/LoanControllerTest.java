@@ -6,6 +6,7 @@ import com.neto.libraryapi.entity.Book;
 import com.neto.libraryapi.entity.Loan;
 import com.neto.libraryapi.service.BookService;
 import com.neto.libraryapi.service.LoanService;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +40,7 @@ public class LoanControllerTest {
     MockMvc mvc;
 
     @MockBean
-    LoanService service;
+    LoanService loanService;
 
     @MockBean
     BookService bookService;
@@ -50,20 +51,18 @@ public class LoanControllerTest {
 
         //cenário
         LoanDTO dto = LoanDTO.builder()
-                .isbn("001").costumer("Aguinaldo Neto")
-                .build();
+                .isbn("001").costumer("Aguinaldo Neto").build();
+
+        String json = new ObjectMapper().writeValueAsString(dto);
 
         Book book = Book.builder().id(1L).isbn("123").build();
 
         Loan costumerSaved = Loan.builder()
-                        .id(1L).costumer("Aguinaldo").book(book).loanDate(LocalDate.now())
-                        .build();
+                        .id(1L).costumer("Aguinaldo").book(book).loanDate(LocalDate.now()).build();
 
         given(bookService.getBookByIsbn("123")).willReturn(Optional.of(book));
 
-        given(service.save(any(Loan.class))).willReturn(costumerSaved);
-
-        String json = new ObjectMapper().writeValueAsString(dto);
+        given(loanService.save(any(Loan.class))).willReturn(costumerSaved);
 
         //ação
         MockHttpServletRequestBuilder request = post(LOAN_API)
@@ -76,6 +75,31 @@ public class LoanControllerTest {
                 .perform(request)
                 .andExpect(status().isCreated())
                 .andExpect(content().string("1"));
+
+    }
+
+    @Test
+    @DisplayName("Deve retornar erro ao tentar fazer o empréstimo de um livro inexistente")
+    public void invalidIsbnCreateLoanTest() throws Exception {
+
+        //cenário
+        LoanDTO dto = LoanDTO.builder()
+                .isbn("001").costumer("Aguinaldo Neto").build();
+        String json = new ObjectMapper().writeValueAsString(dto);
+
+        Book book = Book.builder().id(1L).isbn("").build();
+
+        given(bookService.getBookByIsbn("")).willReturn(Optional.empty());
+
+        MockHttpServletRequestBuilder request = post(LOAN_API)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mvc.perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("errors", Matchers.hasSize(1)))
+                .andExpect(jsonPath("errors[0]").value("Book not found for passed isbn"));
 
     }
 

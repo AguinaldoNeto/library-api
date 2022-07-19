@@ -9,9 +9,13 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CREATED;
 
 @RestController
 @RequestMapping("/api/loans")
@@ -22,9 +26,12 @@ public class LoanController {
     private final BookService bookService;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(CREATED)
     public Long create(@RequestBody LoanDTO dto) {
-        Book book = bookService.getBookByIsbn(dto.getIsbn()).get();
+        Book book = bookService
+                .getBookByIsbn(dto.getIsbn())
+                .orElseThrow( () -> new ResponseStatusException(BAD_REQUEST, "Book not found for passed isbn"));
+
         Loan entity = Loan.builder()
                 .costumer(dto.getCostumer())
                 .book(book)
