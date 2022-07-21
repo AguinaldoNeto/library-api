@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.neto.libraryapi.dto.LoanDTO;
 import com.neto.libraryapi.entity.Book;
 import com.neto.libraryapi.entity.Loan;
+import com.neto.libraryapi.exception.BusinessException;
 import com.neto.libraryapi.service.BookService;
 import com.neto.libraryapi.service.LoanService;
 import org.hamcrest.Matchers;
@@ -102,6 +103,34 @@ public class LoanControllerTest {
                 .andExpect(jsonPath("errors[0]").value("Book not found for passed isbn"));
 
     }
+
+    @Test
+    @DisplayName("Deve retornar erro ao tentar fazer o empréstimo de um livro já emprestado")
+    public void loanedBookErrorOnCreateLoanTest() throws Exception {
+
+        //cenário
+        LoanDTO dto = LoanDTO.builder()
+                .isbn("123").costumer("Aguinaldo Neto").build();
+
+        String json = new ObjectMapper().writeValueAsString(dto);
+
+        Book book = Book.builder().id(1L).isbn("123").build();
+
+        given(bookService.getBookByIsbn("123")).willReturn(Optional.of(book));
+        given(loanService.save(any(Loan.class))).willThrow(new BusinessException("Book already loaned"));
+
+        MockHttpServletRequestBuilder request = post(LOAN_API)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mvc.perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("errors", Matchers.hasSize(1)))
+                .andExpect(jsonPath("errors[0]").value("Book already loaned"));
+
+    }
+
 
 
 }
