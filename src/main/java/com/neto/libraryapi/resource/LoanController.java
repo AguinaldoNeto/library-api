@@ -1,8 +1,10 @@
 package com.neto.libraryapi.resource;
 
 import com.neto.libraryapi.dto.LoanDTO;
+import com.neto.libraryapi.dto.ReturnedLoanDTO;
 import com.neto.libraryapi.entity.Book;
 import com.neto.libraryapi.entity.Loan;
+import com.neto.libraryapi.exception.BusinessException;
 import com.neto.libraryapi.service.BookService;
 import com.neto.libraryapi.service.LoanService;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.validation.Valid;
 import java.time.LocalDate;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping("/api/loans")
@@ -42,5 +43,15 @@ public class LoanController {
         return entity.getId();
     }
 
+    @PatchMapping("/{id}")
+    @ResponseStatus(OK)
+    public void returnBook(@PathVariable Long id, @RequestBody ReturnedLoanDTO dto) {
+        Loan loan = service
+                .getById(id)
+                .orElseThrow( () -> new ResponseStatusException(NOT_FOUND, "Book not found for passed isbn"));
+
+        loan.setReturned(dto.getReturned());
+        service.update(loan);
+    }
 
 }

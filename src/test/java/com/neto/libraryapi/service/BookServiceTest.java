@@ -232,5 +232,23 @@ public class BookServiceTest {
 
     }
 
+    @Test
+    @DisplayName("Deve oter um livro pelo isbn.")
+    public void getBookyIsbn() {
+
+        Book book = Book.builder()
+                .id(1L).title("Título").author("Autor").isbn("123").build();
+
+        when(repository.findByIsbn(book.getIsbn())).thenReturn(Optional.of(book));
+
+        Optional<Book> bookValid = service.getBookByIsbn(book.getIsbn());
+
+        assertThat(bookValid.isPresent()).isTrue();
+        assertThat(bookValid.get().getIsbn()).isEqualTo("123");
+
+        verify(repository, times(1)).findByIsbn(book.getIsbn());
+
+    }
+
 
 }

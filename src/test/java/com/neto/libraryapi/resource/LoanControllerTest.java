@@ -2,6 +2,7 @@ package com.neto.libraryapi.resource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.neto.libraryapi.dto.LoanDTO;
+import com.neto.libraryapi.dto.ReturnedLoanDTO;
 import com.neto.libraryapi.entity.Book;
 import com.neto.libraryapi.entity.Loan;
 import com.neto.libraryapi.exception.BusinessException;
@@ -25,7 +26,10 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -36,6 +40,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class LoanControllerTest {
 
     static final String LOAN_API = "/api/loans";
+
+    static final Long ID = 1L;
 
     @Autowired
     MockMvc mvc;
@@ -128,6 +134,27 @@ public class LoanControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("errors", Matchers.hasSize(1)))
                 .andExpect(jsonPath("errors[0]").value("Book already loaned"));
+
+    }
+
+    @Test
+    @DisplayName("Deve retornar 404 ao tentar retornar um livro inexistente")
+    public void returnInexistenteBookTest() throws Exception {
+
+        ReturnedLoanDTO returnedLoan = ReturnedLoanDTO.builder().build();
+
+        String json = new ObjectMapper().writeValueAsString(returnedLoan);
+
+        given(loanService.getById(anyLong())).willReturn(Optional.empty());
+
+        //execução
+        MockHttpServletRequestBuilder request = patch(LOAN_API.concat("/" + ID))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mvc.perform(request)
+                .andExpect(status().isNotFound());
 
     }
 
