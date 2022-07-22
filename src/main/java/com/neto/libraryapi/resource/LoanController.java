@@ -1,6 +1,7 @@
 package com.neto.libraryapi.resource;
 
 import com.neto.libraryapi.dto.LoanDTO;
+import com.neto.libraryapi.dto.LoanFilterDTO;
 import com.neto.libraryapi.dto.ReturnedLoanDTO;
 import com.neto.libraryapi.entity.Book;
 import com.neto.libraryapi.entity.Loan;
@@ -9,6 +10,8 @@ import com.neto.libraryapi.service.BookService;
 import com.neto.libraryapi.service.LoanService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -52,6 +55,13 @@ public class LoanController {
 
         loan.setReturned(dto.getReturned());
         service.update(loan);
+    }
+
+    @GetMapping
+    public Page<LoanDTO> find(Pageable pageable, LoanFilterDTO filterDTO) {
+        Page<Loan> result = service.find(filterDTO, pageable);
+
+        return null;
     }
 
 }

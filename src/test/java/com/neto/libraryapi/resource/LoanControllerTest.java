@@ -2,6 +2,7 @@ package com.neto.libraryapi.resource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.neto.libraryapi.dto.LoanDTO;
+import com.neto.libraryapi.dto.LoanFilterDTO;
 import com.neto.libraryapi.dto.ReturnedLoanDTO;
 import com.neto.libraryapi.entity.Book;
 import com.neto.libraryapi.entity.Loan;
@@ -16,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -23,14 +27,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
@@ -156,6 +160,37 @@ public class LoanControllerTest {
         mvc.perform(request)
                 .andExpect(status().isNotFound());
 
+    }
+
+    @Test
+    @DisplayName("Deve filtrar livros")
+    public void findLoan() throws Exception {
+
+        final Long ID_LOAN = 1L;
+
+        Book book = Book.builder().id(92L).isbn("352").build();
+
+        Loan loan = Loan.builder()
+                .id(ID_LOAN).book(book).costumer("Cost").loanDate(LocalDate.now()).build();
+
+        given(loanService.find(any(LoanFilterDTO.class), any(Pageable.class))).willReturn(
+                new PageImpl<Loan>(Arrays.asList(loan),
+                        PageRequest.of(0, 10), 1));
+
+        String queryString = String.format(
+                "?isbn=%s&costumer=%s&page=0&size=0",
+                //"?title=%&author=%s&page=0&size=100"
+                book.getIsbn(), loan.getCostumer());
+
+        MockHttpServletRequestBuilder request = get(LOAN_API)
+                .content(queryString);
+
+        mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("content", hasSize(1)))
+                .andExpect(jsonPath("totalElements").value(1))
+                .andExpect(jsonPath("pageable.pageSize").value(10))
+                .andExpect(jsonPath("pageable.pageNumber").value(0));
     }
 
 

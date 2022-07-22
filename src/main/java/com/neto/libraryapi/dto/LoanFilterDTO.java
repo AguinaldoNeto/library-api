@@ -1,26 +1,18 @@
 package com.neto.libraryapi.dto;
 
-import com.neto.libraryapi.entity.Book;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotEmpty;
-
-@Data
 @Builder
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
-public class LoanDTO {
+@AllArgsConstructor
+public class LoanFilterDTO {
 
-    private Long id;
-
-    @NotEmpty
     private String isbn;
-
-    @NotEmpty
     private String costumer;
 
-    private Book book;
 }
