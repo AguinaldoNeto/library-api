@@ -5,6 +5,7 @@ import com.neto.libraryapi.entity.Loan;
 import com.neto.libraryapi.exception.BusinessException;
 import com.neto.libraryapi.repository.LoanRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +40,6 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     public Page<Loan> find(LoanFilterDTO loanFilterDTO, Pageable pageable) {
-        return null;
+        return repository.findByBookIsnOrCostumer(loanFilterDTO.getIsbn(), loanFilterDTO.getIsbn(), pageable);
     }
 }

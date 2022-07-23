@@ -1,7 +1,6 @@
 package com.neto.libraryapi.service;
 
-import com.neto.libraryapi.dto.LoanDTO;
-import com.neto.libraryapi.dto.ReturnedLoanDTO;
+import com.neto.libraryapi.dto.LoanFilterDTO;
 import com.neto.libraryapi.entity.Book;
 import com.neto.libraryapi.entity.Loan;
 import com.neto.libraryapi.exception.BusinessException;
@@ -11,10 +10,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -120,6 +124,34 @@ public class LoanServiceTest {
 
         verify(repository, times(1)).save(loan);
 
+    }
+
+    @Test
+    @DisplayName("Deve filtrar empréstimos pelas propriedades")
+    public void findLoan() throws Exception {
+
+        final Long ID_LOAN = 1L;
+
+        LoanFilterDTO loanFilterDTO = LoanFilterDTO.builder().isbn("123").costumer("teste").build();
+
+        Loan loan = Loan.builder().id(ID_LOAN).build();
+
+        List<Loan> list = Arrays.asList(loan);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+
+        PageImpl<Loan> page = new PageImpl<>(list, pageRequest, list.size());
+        when(repository.findByBookIsnOrCostumer(
+                anyString(),
+                anyString(),
+                any(PageRequest.class)))
+                .thenReturn(page);
+
+        Page<Loan> result = service.find(loanFilterDTO, pageRequest);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent()).isEqualTo(list);
+        assertThat(result.getPageable().getPageNumber()).isEqualTo(0);
+        assertThat(result.getPageable().getPageSize()).isEqualTo(10);
     }
 
 }

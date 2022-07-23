@@ -178,12 +178,11 @@ public class LoanControllerTest {
                         PageRequest.of(0, 10), 1));
 
         String queryString = String.format(
-                "?isbn=%s&costumer=%s&page=0&size=0",
-                //"?title=%&author=%s&page=0&size=100"
+                "?isbn=%s&costumer=%s&page=0&size=10",
                 book.getIsbn(), loan.getCostumer());
 
-        MockHttpServletRequestBuilder request = get(LOAN_API)
-                .content(queryString);
+        MockHttpServletRequestBuilder request = get(LOAN_API.concat(queryString))
+                .accept(MediaType.APPLICATION_JSON);
 
         mvc.perform(request)
                 .andExpect(status().isOk())
