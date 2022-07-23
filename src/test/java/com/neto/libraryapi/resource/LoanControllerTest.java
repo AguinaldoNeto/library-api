@@ -62,7 +62,7 @@ public class LoanControllerTest {
 
         //cenário
         LoanDTO dto = LoanDTO.builder()
-                .isbn("001").costumer("Aguinaldo Neto").build();
+                .isbn("001").costumer("Aguinaldo Neto").email("email@email.com").build();
 
         String json = new ObjectMapper().writeValueAsString(dto);
 
@@ -71,7 +71,7 @@ public class LoanControllerTest {
         Loan costumerSaved = Loan.builder()
                         .id(1L).costumer("Aguinaldo").book(book).loanDate(LocalDate.now()).build();
 
-        given(bookService.getBookByIsbn("123")).willReturn(Optional.of(book));
+        given(bookService.getBookByIsbn(book.getIsbn())).willReturn(Optional.of(book));
 
         given(loanService.save(any(Loan.class))).willReturn(costumerSaved);
 

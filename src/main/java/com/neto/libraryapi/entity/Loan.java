@@ -22,6 +22,9 @@ public class Loan {
     @Column(name = "costumer", length = 100)
     private String costumer;
 
+    @Column(name = "costumer_email")
+    private String costumerEmail;
+
     @JoinColumn(name = "id_book")
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Book book;

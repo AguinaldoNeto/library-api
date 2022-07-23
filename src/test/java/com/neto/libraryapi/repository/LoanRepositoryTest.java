@@ -14,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -68,5 +69,29 @@ public class LoanRepositoryTest {
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().contains(loan));
 
+    }
+
+    @Test
+    @DisplayName("Deve obter empréstimos cuja a data de empréstimo for maior ou igual a três dias atrás e não retornados")
+    public void findByLoanDateLessThanAndNotReturned() {
+
+        Loan loan = Loan.builder().costumer("Aguinaldo").loanDate(LocalDate.now().minusDays(5)).build();
+        entityManager.persist(loan);
+
+        List<Loan> result = repository.findByLoanDateLessThanAndNotReturned(loan.getLoanDate().minusDays(4));
+
+        assertThat(result).hasSize(1).contains(loan);
+    }
+
+    @Test
+    @DisplayName("Deve obter empréstimos cuja a data de empréstimo for menor ou igual a três dias atrás e não retornados")
+    public void notFindByLoanDateLessThanAndNotReturned() {
+
+        Loan loan = Loan.builder().costumer("Aguinaldo").loanDate(LocalDate.now().minusDays(3)).build();
+        entityManager.persist(loan);
+
+        List<Loan> result = repository.findByLoanDateLessThanAndNotReturned(loan.getLoanDate().minusDays(4));
+
+        assertThat(result).isEmpty();
     }
 }

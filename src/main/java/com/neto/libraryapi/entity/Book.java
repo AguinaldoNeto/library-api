@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.Null;
+import java.util.List;
 
 @Data
 @Builder
@@ -18,13 +20,16 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(name = "title")
     private String title;
 
-    @Column
+    @Column(name = "author")
     private String author;
 
-    @Column
+    @Column(name = "isbn")
     private String isbn;
+
+    @OneToMany(mappedBy = "book")
+    List<Loan> loans;
 
 }

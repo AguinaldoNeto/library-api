@@ -22,5 +22,8 @@ public class LoanDTO {
     @NotEmpty
     private String costumer;
 
+    @NotEmpty
     private BookDTO book;
+
+    private String email;
 }
