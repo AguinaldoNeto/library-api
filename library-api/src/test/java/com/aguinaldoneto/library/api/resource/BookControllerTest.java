@@ -3,6 +3,7 @@ package com.aguinaldoneto.library.api.resource;
 import com.aguinaldoneto.library.api.dto.BookDTO;
 import com.aguinaldoneto.library.api.model.entity.Book;
 import com.aguinaldoneto.library.api.service.BookService;
+import com.aguinaldoneto.library.exception.BusinessException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,11 +43,7 @@ public class BookControllerTest {
     public void createBookTest() throws Exception {
 
         //requisição
-        BookDTO dto = BookDTO.builder()
-                .title("As aventuras")
-                .author("Aguinaldo")
-                .isbn("001")
-                .build();
+        BookDTO dto = createNewBook();
 
         // objeto
         Book savedBook = Book.builder()
@@ -94,5 +91,34 @@ public class BookControllerTest {
         mvc.perform(request)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("errors", hasSize(3)));
+    }
+
+    @Test
+    @DisplayName("Deve lançar erro ao tentar cadastrar um livro com isbn já utilizado por outro.")
+    public void createBookWithDuplicatedIsbn() throws Exception {
+        String messageIsbnAlreadySaved = "ISBN já cadastrado.";
+        BookDTO dto = createNewBook();
+
+        String json = new ObjectMapper().writeValueAsString(dto);
+        given(service.save(any(Book.class))).willThrow(new BusinessException(messageIsbnAlreadySaved));
+
+        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+                .post(BOOK_API)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json);
+
+        mvc.perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("errors", hasSize(1)))
+                .andExpect(jsonPath("errors[0]").value(messageIsbnAlreadySaved));
+    }
+
+    private static BookDTO createNewBook() {
+        return BookDTO.builder()
+                .title("As aventuras")
+                .author("Aguinaldo")
+                .isbn("001")
+                .build();
     }
 }

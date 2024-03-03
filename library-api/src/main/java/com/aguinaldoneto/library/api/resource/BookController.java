@@ -4,12 +4,15 @@ import com.aguinaldoneto.library.api.dto.BookDTO;
 import com.aguinaldoneto.library.api.exception.ApiErrors;
 import com.aguinaldoneto.library.api.model.entity.Book;
 import com.aguinaldoneto.library.api.service.BookService;
+import com.aguinaldoneto.library.exception.BusinessException;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+
+
 
 @RestController
 @RequestMapping("/api/books")
@@ -39,6 +42,12 @@ public class BookController {
     public ApiErrors handleValidationExceptions(MethodArgumentNotValidException ex) {
         BindingResult bindingResult = ex.getBindingResult();
         return new ApiErrors(bindingResult);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiErrors handleValidationExceptions(BusinessException ex) {
+        return new ApiErrors(ex);
     }
 
 }
